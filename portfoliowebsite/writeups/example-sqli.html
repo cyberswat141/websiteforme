@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Baby SQLi — Example CTF 2026</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚩</text></svg>">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div class="scanline" aria-hidden="true"></div>
+
+  <article class="writeup">
+    <a class="writeup-back" href="../index.html#ctf">back to writeups</a>
+
+    <h1>Baby SQLi</h1>
+    <p class="writeup-meta">
+      Example CTF 2026 &nbsp;·&nbsp; category: web &nbsp;·&nbsp; 150 pts &nbsp;·&nbsp; solved 2026-02-14
+    </p>
+
+    <h2>Challenge description</h2>
+    <blockquote>
+      "Our login page is bulletproof — we filter all the dangerous words!
+      Can you get in as admin?" — a login form at <code>http://baby-sqli.example</code>.
+    </blockquote>
+    <p><em>Note: this is a demo writeup so you can see the format. Replace it with a real one.</em></p>
+
+    <h2>Recon</h2>
+    <p>
+      The form POSTs <code>username</code> and <code>password</code>. Submitting
+      a single quote in the username field threw a SQL syntax error, confirming
+      injection:
+    </p>
+    <pre><code>POST /login
+username=admin'&amp;password=x
+
+→ SQL syntax error near "'" at line 1</code></pre>
+    <p>
+      A quick probe showed the app rejected the words <code>OR</code>,
+      <code>UNION</code>, and <code>SELECT</code> when written in lowercase —
+      a naive blocklist.
+    </p>
+
+    <h2>Exploitation</h2>
+    <p>
+      The filter only matched exact lowercase keywords, so mixed case sailed
+      right through. Classic authentication bypass with a commented-out
+      password check:
+    </p>
+    <pre><code>username=admin'-- -
+password=anything</code></pre>
+    <p>
+      That logged us in as <code>admin</code>. To pull the flag out of an
+      unlisted table I used a UNION-based injection with case-swapped keywords:
+    </p>
+    <pre><code>username=x' UnIoN SeLeCt flag,2,3 FrOm secret_flags-- -</code></pre>
+
+    <h2>Flag</h2>
+    <p><code class="flag">flag{c4se_1nsensit1ve_f1lters_are_useless}</code></p>
+
+    <h2>Takeaways</h2>
+    <ul>
+      <li>Blocklists are the wrong tool — parameterized queries are the fix.</li>
+      <li>Always test keyword filters with case variation and inline comments.</li>
+    </ul>
+  </article>
+
+  <footer class="site-footer">
+    <p><a href="../index.html">← home</a></p>
+  </footer>
+</body>
+</html>
