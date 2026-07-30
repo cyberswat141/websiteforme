@@ -61,6 +61,16 @@ const WRITEUPS = [
       "copy writeups/_template.html, and write up your own solve.",
     link: "writeups/_template.html",
   },
+     {
+    title: "Reactor — Hack The Box",
+    event: "Hack The Box",
+    category: "web",
+    points: 30,
+    description:
+      "Next.js 15.0.3 RCE (CVE-2025-55182) for foothold, cracked an MD5 from " +
+      "reactor.db to SSH in, then abused a root Node --inspect debugger to reach root.",
+    link: "writeups/reactor.html",
+  },
 ];
 
 /* ---- Bug bounty findings ----------------------------------
