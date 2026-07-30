@@ -18,9 +18,10 @@ const SITE = {
     "Ghidra / pwntools",
   ],
   contacts: [
-    { label: "email", url: "mailto:you@example.com" },
+    { label: "email", url: "cyberswat750@gmail.com" },
     { label: "github", url: "https://github.com/cyberswat141" },
     { label: "Linkedin", url: "https://www.linkedin.com/in/milosz-bilas-35679a2a0?utm_source=share_via&utm_content=profile&utm_medium=member_android" },
+    { label: "HackTheBox", url: "https://profile.hackthebox.com/" },
   ],
 };
 
