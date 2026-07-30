@@ -71,6 +71,16 @@ const WRITEUPS = [
       "reactor.db to SSH in, then abused a root Node --inspect debugger to reach root.",
     link: "writeups/reactor.html",
   },
+     {
+    title: "facts — Hack The Box",
+    event: "Hack The Box",
+    category: "web",
+    points: 30,
+    description:
+      "Camaleon CMS mass-assignment (CVE-2025-2304) to admin, looted MinIO S3 for an " +
+      "SSH key, cracked its passphrase, then rooted via a passwordless sudo facter.",
+    link: "writeups/facts.html",
+  },
 ];
 
 /* ---- Bug bounty findings ----------------------------------
