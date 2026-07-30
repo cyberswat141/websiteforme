@@ -20,8 +20,7 @@ const SITE = {
   contacts: [
     { label: "email", url: "mailto:you@example.com" },
     { label: "github", url: "https://github.com/cyberswat141" },
-    { label: "hackerone", url: "https://hackerone.com/yourhandle" },
-    { label: "x / twitter", url: "https://x.com/yourhandle" },
+    { label: "Linkedin", url: "https://www.linkedin.com/in/milosz-bilas-35679a2a0?utm_source=share_via&utm_content=profile&utm_medium=member_android" },
   ],
 };
 
