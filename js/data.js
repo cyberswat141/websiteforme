@@ -21,7 +21,7 @@ const SITE = {
     { label: "email", url: "cyberswat750@gmail.com" },
     { label: "github", url: "https://github.com/cyberswat141" },
     { label: "Linkedin", url: "https://www.linkedin.com/in/milosz-bilas-35679a2a0?utm_source=share_via&utm_content=profile&utm_medium=member_android" },
-    { label: "HackTheBox", url: "https://profile.hackthebox.com/" },
+    { label: "HackTheBox", url: "https://profile.hackthebox.com/profile/019e7fba-8479-7167-8ab6-c55562a2662d" },
   ],
 };
 
