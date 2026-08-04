@@ -31,36 +31,6 @@ const SITE = {
          an external gist/blog post.
 ----------------------------------------------------------- */
 const WRITEUPS = [
-  {
-    title: "Baby SQLi — Example CTF 2026",
-    event: "Example CTF 2026",
-    category: "web",
-    points: 150,
-    description:
-      "Classic UNION-based SQL injection behind a naive keyword filter. " +
-      "Bypassed with inline comments and dumped the flag from an unlisted table.",
-    link: "writeups/example-sqli.html",
-  },
-  {
-    title: "ret2libc warmup — Example CTF 2026",
-    event: "Example CTF 2026",
-    category: "pwn",
-    points: 300,
-    description:
-      "Stack buffer overflow with NX enabled. Leaked libc via puts@GOT, " +
-      "computed base, and returned to system('/bin/sh').",
-    link: "writeups/example-pwn.html",
-  },
-  {
-    title: "Spinning VM — replace me",
-    event: "Some CTF",
-    category: "rev",
-    points: 450,
-    description:
-      "This is a placeholder card. Duplicate this object in js/data.js, " +
-      "copy writeups/_template.html, and write up your own solve.",
-    link: "writeups/_template.html",
-  },
      {
     title: "Reactor — Hack The Box",
     event: "Hack The Box",
