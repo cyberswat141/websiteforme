@@ -5,8 +5,8 @@
    ========================================================== */
 
 const SITE = {
-  name: "Your Name",            // shown in the hero
-  handle: "0xyourhandle",       // used in footer
+  name: "Milosz",            // shown in the hero
+  handle: "CyberSwat",       // used in footer
   blurb:
     "Security researcher & CTF player. I hunt bugs, write up my findings, " +
     "and build tools along the way.",
