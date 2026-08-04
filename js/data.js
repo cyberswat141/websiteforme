@@ -56,14 +56,6 @@ const WRITEUPS = [
 /* ---- Projects --------------------------------------------- */
 const PROJECTS = [
   {
-    title: "recon-buddy",
-    description:
-      "Placeholder project. A small wrapper that chains subdomain enumeration, " +
-      "port scanning, and screenshotting into one command. Replace me in js/data.js.",
-    tags: ["python", "recon", "automation"],
-    link: "https://github.com/cyberswat141",
-  },
-  {
     title: "this website",
     description:
       "This portfolio itself — hand-written HTML/CSS/JS, no frameworks, " +
