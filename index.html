@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Security researcher portfolio — CTF writeups, bug bounty findings, and projects.">
+  <title>~/portfolio — security researcher</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚩</text></svg>">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="scanline" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <nav class="nav container">
+      <a href="#top" class="nav-logo"><span class="prompt">$</span> whoami</a>
+      <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">☰</button>
+      <ul class="nav-links">
+        <li><a href="#about">about</a></li>
+        <li><a href="#ctf">ctf</a></li>
+        <li><a href="#projects">projects</a></li>
+        <li><a href="#contact">contact</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="top">
+
+    <!-- ============ HERO ============ -->
+    <section class="hero container">
+      <p class="hero-pre">Hi, my name is</p>
+      <h1 class="hero-name" id="hero-name">Your Name</h1>
+      <h2 class="hero-tagline">I break things to make them safer<span class="cursor">▊</span></h2>
+      <p class="hero-blurb" id="hero-blurb">
+        Security researcher &amp; CTF player. I hunt bugs, write up my findings,
+        and build tools along the way.
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#ctf">Read my writeups</a>
+        <a class="btn" href="#contact">Get in touch</a>
+      </div>
+      <div class="hero-stats" id="hero-stats">
+        <!-- populated by js -->
+      </div>
+    </section>
+
+    <!-- ============ ABOUT ============ -->
+    <section id="about" class="section container">
+      <h2 class="section-title"><span class="section-num">01.</span> about me</h2>
+      <div class="about-grid">
+        <div class="about-text">
+          <p>
+            I'm a security enthusiast who spends way too much time in terminals.
+            My focus areas are web application security and reverse engineering.
+            When I'm not playing CTFs I'm hunting bugs on bug bounty platforms
+            or building small tools to automate the boring parts.
+          </p>
+          <p>Some things I work with:</p>
+          <ul class="skills-list" id="skills-list">
+            <!-- populated by js -->
+          </ul>
+        </div>
+        <div class="about-terminal" aria-hidden="true">
+          <div class="terminal-bar">
+            <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+            <span class="terminal-title">bash — 80×24</span>
+          </div>
+          <pre class="terminal-body"><code><span class="prompt">$</span> id
+uid=1337(me) gid=1337(cyberswat)
+<span class="prompt">$</span> cat /etc/motd
+Trust nothing. Verify everything.
+<span class="prompt">$</span> ls ~/goals
+oscp/  more-cves/
+<span class="prompt">$</span> <span class="cursor">▊</span></code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CTF WRITEUPS ============ -->
+    <section id="ctf" class="section container">
+      <h2 class="section-title"><span class="section-num">02.</span> ctf writeups</h2>
+      <p class="section-sub">Challenges I've solved and documented. Filter by category:</p>
+      <div class="filter-bar" id="ctf-filters" role="group" aria-label="Filter writeups by category"></div>
+      <div class="card-grid" id="ctf-grid"></div>
+    </section>
+
+    <!-- ============ PROJECTS ============ -->
+    <section id="projects" class="section container">
+      <h2 class="section-title"><span class="section-num">03.</span> projects</h2>
+      <p class="section-sub">Tools and experiments, mostly security-related.</p>
+      <div class="card-grid" id="projects-grid"></div>
+    </section>
+
+    <!-- ============ CONTACT ============ -->
+    <section id="contact" class="section container contact">
+      <h2 class="section-title"><span class="section-num">04.</span> contact</h2>
+      <p class="contact-blurb">
+        Want to collaborate on a CTF, discuss a finding, or just talk security?
+        My inbox is open.
+      </p>
+      <div class="contact-links" id="contact-links"></div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <p><span class="prompt">$</span> echo "built with vanilla HTML/CSS/JS — no frameworks were harmed"</p>
+    <p class="footer-copy" id="footer-copy"></p>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
