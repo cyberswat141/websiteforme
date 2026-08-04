@@ -40,7 +40,6 @@
     return `<article class="card" data-category="${esc(w.category)}">
       <div class="card-top">
         <span>${esc(w.event)}</span>
-        <span>${esc(w.points)} pts</span>
       </div>
       <h3><a href="${esc(w.link)}">${esc(w.title)}</a></h3>
       <p>${esc(w.description)}</p>
